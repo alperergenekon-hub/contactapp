@@ -202,6 +202,12 @@ select.inp{cursor:pointer}
   .filter-chip{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid var(--bdr);background:var(--sur);color:var(--t1);transition:all .12s;-webkit-tap-highlight-color:transparent}
   .filter-chip.on{border-color:var(--accent);background:#eff6ff;color:var(--accent)}
 
+  /* mobile filter bar */
+  .mobile-filter-bar{display:flex;align-items:center;gap:6px;padding:8px 12px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;border-bottom:1px solid var(--bdr);background:var(--sur)}
+  .mobile-filter-bar::-webkit-scrollbar{display:none}
+  .mobile-filter-bar .filter-divider{width:1px;height:20px;background:var(--bdr);flex-shrink:0;margin:0 2px}
+  .mobile-filter-bar .filter-chip{padding:5px 11px;font-size:12px;white-space:nowrap;flex-shrink:0}
+
   /* full-screen modals */
   .overlay{padding:0;align-items:flex-end}
   .modal{border-radius:16px 16px 0 0;max-height:95dvh;padding-bottom:env(safe-area-inset-bottom)}
@@ -1143,6 +1149,33 @@ function FilterDrawer({ contacts, freqFilter, setFreqFilter, statusFilter, setSt
   );
 }
 
+/* ══════════════════ MOBILE FILTER BAR ══════════════════ */
+function MobileFilterBar({ contacts, freqFilter, setFreqFilter, statusFilter, setStatusFilter }) {
+  const allFreqs    = [30,60,90,180,360,720];
+  const allStatuses = ['reach','soon','ok'];
+  const statusLabel = {reach:'Reach',soon:'Soon',ok:'OK'};
+  const statusColor = {reach:'var(--reach)',soon:'var(--soon)',ok:'var(--ok)'};
+  const toggleFreq  = f => setFreqFilter(p=>p.includes(f)?p.filter(x=>x!==f):[...p,f]);
+  const toggleStat  = s => setStatusFilter(p=>p.includes(s)?p.filter(x=>x!==s):[...p,s]);
+  return (
+    <div className="mobile-filter-bar">
+      {allFreqs.map(f=>(
+        <span key={f} className={`filter-chip ${freqFilter.includes(f)?'on':''}`} onClick={()=>toggleFreq(f)}>
+          {f}d
+        </span>
+      ))}
+      <div className="filter-divider"/>
+      {allStatuses.map(s=>(
+        <span key={s} className={`filter-chip ${statusFilter.includes(s)?'on':''}`} onClick={()=>toggleStat(s)}
+          style={statusFilter.includes(s)?{borderColor:statusColor[s],background:s==='reach'?'#fef2f2':s==='soon'?'#fffbeb':'#f0fdf4',color:statusColor[s]}:{}}>
+          <span style={{display:'inline-block',width:6,height:6,borderRadius:'50%',background:statusColor[s],marginRight:4,verticalAlign:'middle'}}/>
+          {statusLabel[s]}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 /* ══════════════════ BOTTOM NAV ══════════════════ */
 function BottomNav({ active, onContacts, onFilter, onToday, onAdd, reachCount }) {
   return (
@@ -1270,7 +1303,7 @@ const COLS = [
   {key:'plannedContact',label:'Planned'},
 ];
 
-function ContactTable({ contacts, onEdit, onUpdate, density, isMobile }) {
+function ContactTable({ contacts, onEdit, onUpdate, density, isMobile, freqFilter, setFreqFilter, statusFilter, setStatusFilter }) {
   const [sortKey, setSortKey]   = useLS('ca_sort','lastContacted');
   const [sortDir, setSortDir]   = useLS('ca_sortdir','asc');
   const [collapsed, setCollapsed] = useLS('ca_collapsed',[]);
@@ -1381,6 +1414,15 @@ function ContactTable({ contacts, onEdit, onUpdate, density, isMobile }) {
         </div>
         {isMobile && <button className="btn btn-ghost" style={{padding:'0 10px',minWidth:36}} onClick={()=>setImportModal(true)}>⬆</button>}
       </div>
+
+      {/* mobile filter bar */}
+      {isMobile && freqFilter && statusFilter && (
+        <MobileFilterBar
+          contacts={contacts}
+          freqFilter={freqFilter} setFreqFilter={setFreqFilter}
+          statusFilter={statusFilter} setStatusFilter={setStatusFilter}
+        />
+      )}
 
       {/* selection bar */}
       {selArr.length > 0 && (
@@ -1612,6 +1654,8 @@ function MainApp({ user, onLogout }) {
           onUpdate={setContacts}
           density={tweaks.density}
           isMobile={isMobile}
+          freqFilter={freqFilter} setFreqFilter={setFreqFilter}
+          statusFilter={statusFilter} setStatusFilter={setStatusFilter}
         />
         {isMobile && (
           <BottomNav
