@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContactApp</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<!-- Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sb:#0f172a; --sb2:#1e293b; --sb3:#334155;
+  --bg:#f8fafc; --sur:#fff; --bdr:#e2e8f0;
+  --t1:#0f172a; --t2:#64748b; --t3:#94a3b8;
+  --accent:#3b82f6; --accent2:#2563eb;
+  --reach:#ef4444; --soon:#f59e0b; --ok:#22c55e;
+  --r:6px; --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);height:100vh;overflow:hidden;font-size:14px}
+
+/* ── layout ── */
+.layout{display:flex;height:100vh}
+.sidebar{width:224px;background:var(--sb);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.topbar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:0 20px;height:54px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.content{flex:1;overflow-y:auto}
+
+/* ── sidebar ── */
+.sb-logo{padding:18px 16px 14px;color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--sb2)}
+.sb-logo-dot{width:28px;height:28px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0}
+.sb-sec{padding:16px 12px 6px}
+.sb-sec-title{font-size:11px;font-weight:600;color:var(--sb3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding:0 4px}
+.sb-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;cursor:pointer;color:#cbd5e1;font-size:13px;transition:background .12s;margin-bottom:1px;user-select:none}
+.sb-item:hover{background:var(--sb2);color:#fff}
+.sb-item input[type=checkbox]{accent-color:var(--accent);width:14px;height:14px;flex-shrink:0;cursor:pointer}
+.sb-item .sb-count{margin-left:auto;font-size:11px;background:var(--sb2);color:var(--sb3);padding:1px 7px;border-radius:20px}
+.sb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sb-footer{margin-top:auto;border-top:1px solid var(--sb2);padding:12px 16px}
+.sb-user{display:flex;align-items:center;gap:10px;color:#94a3b8;font-size:13px}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.sb-logout{font-size:12px;color:var(--sb3);cursor:pointer;margin-top:6px;padding:2px 0}
+.sb-logout:hover{color:#cbd5e1}
+
+/* ── topbar ── */
+.topbar-title{font-size:15px;font-weight:600}
+.search{display:flex;align-items:center;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:0 10px;height:34px;gap:6px;width:200px}
+.search input{border:none;background:none;outline:none;font-size:13px;font-family:inherit;color:var(--t1);width:100%}
+.search-icon{color:var(--t3);font-size:14px;flex-shrink:0}
+
+/* ── buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 14px;height:34px;border-radius:var(--r);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent2);border-color:var(--accent2)}
+.btn-ghost{background:var(--sur);color:var(--t1);border-color:var(--bdr)}
+.btn-ghost:hover{background:var(--bg)}
+.btn-danger{color:#dc2626;background:#fff;border-color:#fca5a5}
+.btn-danger:hover{background:#fef2f2}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.icon-btn{background:none;border:none;cursor:pointer;color:var(--t2);font-size:17px;padding:4px;border-radius:4px;line-height:1;display:flex;align-items:center}
+.icon-btn:hover{color:var(--t1);background:var(--bg)}
+
+/* ── table ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f1f5f9;border-bottom:1.5px solid var(--bdr);padding:8px 12px;text-align:left;font-weight:600;font-size:12px;color:var(--t2);white-space:nowrap;user-select:none;cursor:pointer;position:sticky;top:0;z-index:1}
+th:hover{background:#e8edf4;color:var(--t1)}
+th.sorted{color:var(--accent)}
+td{padding:8px 12px;border-bottom:1px solid var(--bdr);vertical-align:middle;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr.data-row:hover td{background:#f8fafc;cursor:default}
+tr.data-row.sel td{background:#eff6ff}
+tr.data-row.sel:hover td{background:#dbeafe}
+.grp-row td{background:#f1f5f9;font-weight:600;font-size:12px;color:var(--t2);padding:6px 12px;cursor:pointer;border-bottom:1px solid var(--bdr)}
+.grp-row:hover td{background:#e8edf4;color:var(--t1)}
+.grp-chevron{display:inline-block;margin-right:6px;transition:transform .15s;font-style:normal}
+
+/* ── status ── */
+.status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:3px 9px;border-radius:20px}
+.status-reach{background:#fef2f2;color:#dc2626}
+.status-soon{background:#fffbeb;color:#b45309}
+.status-ok{background:#f0fdf4;color:#16a34a}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sdot-reach{background:var(--reach)}
+.sdot-soon{background:var(--soon)}
+.sdot-ok{background:var(--ok)}
+
+/* ── inline edit ── */
+.cell-edit{cursor:pointer;border-radius:4px;padding:2px 6px;transition:background .12s;display:inline-block;min-width:60px}
+.cell-edit:hover{background:var(--bdr);color:var(--t1)}
+.cell-edit.empty{color:var(--t3);font-style:italic}
+.inline-input{font-family:inherit;font-size:13px;border:1.5px solid var(--accent);border-radius:4px;padding:2px 6px;outline:none;background:#fff;color:var(--t1);width:130px}
+
+/* ── modal ── */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.4);display:flex;align-items:center;justify-content:center;z-index:500;padding:16px}
+.modal{background:var(--sur);border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.18);width:100%;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column}
+.modal-hd{padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;background:var(--sur);z-index:1}
+.modal-title{font-size:15px;font-weight:600}
+.modal-body{padding:20px;flex:1}
+.modal-ft{padding:14px 20px;border-top:1px solid var(--bdr);display:flex;gap:8px;align-items:center;flex-shrink:0;position:sticky;bottom:0;background:var(--sur)}
+.tab-row{display:flex;border-bottom:1px solid var(--bdr);padding:0 20px;background:var(--sur);flex-shrink:0}
+.tab-pill{padding:10px 14px;font-family:inherit;font-size:13px;font-weight:500;border:none;background:none;cursor:pointer;color:var(--t2);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tab-pill.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-pill:hover:not(.active){color:var(--t1)}
+
+/* ── form ── */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+.fg-full{grid-column:1/-1}
+.field-g{display:flex;flex-direction:column;gap:4px}
+.field-lbl{font-size:12px;font-weight:600;color:var(--t2)}
+.inp{font-family:inherit;font-size:13px;padding:7px 10px;border:1.5px solid var(--bdr);border-radius:var(--r);outline:none;transition:border-color .15s;color:var(--t1);background:var(--sur);width:100%}
+.inp:focus{border-color:var(--accent)}
+textarea.inp{resize:vertical;min-height:70px}
+select.inp{cursor:pointer}
+
+/* ── misc ── */
+.badge{font-size:11px;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.badge-ok{background:#dcfce7;color:#166534}
+.badge-warn{background:#fef9c3;color:#854d0e}
+.badge-err{background:#fee2e2;color:#991b1b}
+.hist-row{padding:8px 0;border-bottom:1px solid var(--bdr)}
+.hist-row:last-child{border-bottom:none}
+.hist-date{font-size:12px;font-weight:600;color:var(--t2)}
+.hist-note{font-size:13px;margin-top:2px}
+.empty-sm{text-align:center;padding:32px;color:var(--t2);font-size:13px}
+.empty-state{text-align:center;padding:80px 20px;color:var(--t2)}
+.empty-state h3{font-size:16px;font-weight:600;color:var(--t1);margin-bottom:6px}
+.sel-bar{background:#eff6ff;border-bottom:1px solid #bfdbfe;padding:0 20px;height:40px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;color:var(--accent);flex-shrink:0}
+
+/* ── login ── */
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%)}
+.login-card{background:var(--sur);border-radius:14px;box-shadow:0 24px 80px rgba(0,0,0,.3);padding:40px;width:100%;max-width:360px}
+.login-logo{text-align:center;margin-bottom:32px}
+.login-logo-icon{width:52px;height:52px;background:var(--accent);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;margin:0 auto 14px}
+.login-logo h1{font-size:22px;font-weight:700}
+.login-logo p{font-size:13px;color:var(--t2);margin-top:4px}
+.login-link{background:none;border:none;cursor:pointer;color:var(--accent);font-size:13px;font-family:inherit;text-decoration:underline;padding:0}
+.login-err{background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:9px 12px;font-size:13px;color:#dc2626;margin-bottom:14px}
+.login-info{background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:9px 12px;font-size:12px;color:#1d4ed8;margin-bottom:14px}
+
+/* ── tweaks ── */
+#tweaks-panel{position:fixed;bottom:20px;right:20px;background:var(--sur);border:1px solid var(--bdr);border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.12);padding:16px;z-index:600;width:240px;display:none}
+#tweaks-panel h3{font-size:14px;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bdr)}
+.tw-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:13px;color:var(--t2)}
+.tw-row select,.tw-row input[type=color]{font-family:inherit;font-size:12px;border:1px solid var(--bdr);border-radius:4px;padding:2px 4px}
+.tw-row input[type=color]{width:32px;height:26px;padding:1px;cursor:pointer}
+
+/* ══════════════════════════════════════
+   MOBILE  (≤768px)
+══════════════════════════════════════ */
+@media(max-width:768px){
+  body{overflow:auto}
+  .layout{flex-direction:column;height:100dvh}
+  .sidebar{display:none}
+  .main{height:100dvh;display:flex;flex-direction:column}
+
+  /* topbar */
+  .topbar{padding:0 12px;height:52px;gap:8px}
+  .topbar-title{font-size:14px}
+  .search{width:auto;flex:1}
+  .topbar-actions-desktop{display:none!important}
+
+  /* table → hide, show cards */
+  .tbl-wrap table{display:none}
+  .contact-cards{display:flex;flex-direction:column;gap:0}
+
+  /* contact card */
+  .contact-card{background:var(--sur);border-bottom:1px solid var(--bdr);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .12s;-webkit-tap-highlight-color:transparent}
+  .contact-card:active{background:#f1f5f9}
+  .contact-card-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+  .contact-card-body{flex:1;min-width:0}
+  .contact-card-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .contact-card-sub{font-size:12px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+  .contact-card-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+  .contact-card-last{font-size:11px;color:var(--t3)}
+
+  /* group header */
+  .grp-card-hdr{background:#f1f5f9;border-bottom:1px solid var(--bdr);padding:8px 16px;display:flex;align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .grp-card-hdr-label{font-size:12px;font-weight:600;color:var(--t2);flex:1}
+  .grp-card-hdr-badge{font-size:11px;color:var(--reach);font-weight:600}
+
+  /* bottom nav */
+  .bottom-nav{display:flex;background:var(--sur);border-top:1px solid var(--bdr);height:60px;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
+  .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:none;font-family:inherit;color:var(--t2);font-size:10px;font-weight:500;transition:color .12s;-webkit-tap-highlight-color:transparent}
+  .bn-item.active{color:var(--accent)}
+  .bn-item svg,.bn-item .bn-icon{font-size:20px;line-height:1}
+  .bn-add{background:var(--accent);color:#fff!important;width:44px;height:44px;border-radius:50%;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(59,130,246,.4);margin-top:-14px;border:3px solid var(--bg)}
+
+  /* filter drawer */
+  .filter-drawer-overlay{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:400;display:flex;align-items:flex-end}
+  .filter-drawer{background:var(--sur);border-radius:16px 16px 0 0;width:100%;max-height:80dvh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)}
+  .filter-drawer-handle{width:36px;height:4px;background:var(--bdr);border-radius:2px;margin:12px auto 0}
+  .filter-drawer-hd{padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bdr)}
+  .filter-drawer-body{padding:16px 20px}
+  .filter-section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);margin-bottom:10px;margin-top:16px}
+  .filter-section-title:first-child{margin-top:0}
+  .filter-chip-row{display:flex;flex-wrap:wrap;gap:8px}
+  .filter-chip{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid var(--bdr);background:var(--sur);color:var(--t1);transition:all .12s;-webkit-tap-highlight-color:transparent}
+  .filter-chip.on{border-color:var(--accent);background:#eff6ff;color:var(--accent)}
+
+  /* full-screen modals */
+  .overlay{padding:0;align-items:flex-end}
+  .modal{border-radius:16px 16px 0 0;max-height:95dvh;padding-bottom:env(safe-area-inset-bottom)}
+
+  /* misc */
+  .sel-bar{padding:0 12px}
+  .fg{grid-template-columns:1fr}
+  .content{-webkit-overflow-scrolling:touch}
+  .reach-banner{display:flex}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- ══════════════════ FIREBASE CONFIG — paste your project values here ══════════════════ -->
+<script>
+const firebaseConfig = {
+  apiKey:            "AIzaSyClM_4jxDjY8ZagaGyKKBwUH60DtB-oWVw",
+  authDomain:        "contactsapp-1eb2d.firebaseapp.com",
+  databaseURL:       "https://contactsapp-1eb2d-default-rtdb.firebaseio.com",
+  projectId:         "contactsapp-1eb2d",
+  storageBucket:     "contactsapp-1eb2d.firebasestorage.app",
+  messagingSenderId: "485593493090",
+  appId:             "1:485593493090:web:d4ef0f917205997a0fab3b"
+};
+// Detect whether the config has been filled in
+const FB_CONFIGURED = Object.values(firebaseConfig).every(v => !v.startsWith('PASTE_'));
+if (FB_CONFIGURED) firebase.initializeApp(firebaseConfig);
+</script>
+
+<!-- ══════════════════ MODALS (inlined from ContactModals.jsx) ══════════════════ -->
+<script type="text/babel" data-presets="react">
+const { useState: mUseState, useRef: mUseRef, useEffect: mUseEffect } = React;
+
+/* ══════════════════════════════════════════
+   ContactModal — Add / Edit (tabbed)
+══════════════════════════════════════════ */
+function ContactModal({ contact, onSave, onClose }) {
+  const isEdit = !!contact?.id;
+  const [tab, setTab] = mUseState('info');
+  const blank = {
+    id:null,name:'',company:'',position:'',phone1:'',phone2:'',
+    email:'',birthday:'',category:'',frequency:30,plannedContact:'',
+    notes:'',lastContactedHistory:[]
+  };
+  const [form, setForm] = mUseState(isEdit ? {...contact} : blank);
+  const set = (k,v) => setForm(f=>({...f,[k]:v}));
+
+  const handleSave = () => {
+    if (!form.name.trim()) { alert('Name is required.'); return; }
+    onSave({...form, id: form.id || String(Date.now())});
+    onClose();
+  };
+
+  const addHistoryEntry = (dateVal) => {
+    if (!dateVal) return;
+    const hist = [...(form.lastContactedHistory||[])];
+    if (hist.length && hist[hist.length-1].date === dateVal) return;
+    hist.push({date: dateVal, notes:''});
+    set('lastContactedHistory', hist);
+  };
+
+  const lastDate = form.lastContactedHistory?.slice(-1)[0]?.date || '';
+
+  return (
+    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{maxWidth:580}}>
+        <div className="modal-hd">
+          <span className="modal-title">{isEdit ? `Edit: ${form.name}` : 'New Contact'}</span>
+          <button className="icon-btn" onClick={onClose}>✕</button>
+        </div>
+        {isEdit && (
+          <div className="tab-row">
+            {['info','history','notes'].map(t=>(
+              <button key={t} className={`tab-pill ${tab===t?'active':''}`} onClick={()=>setTab(t)}>
+                {t==='info'?'Info':t==='history'?`History (${form.lastContactedHistory?.length||0})`:'Notes'}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="modal-body">
+          {tab==='info' && (
+            <div className="fg">
+              <div className="fg-full"><Field label="Full Name *"><input className="inp" value={form.name} onChange={e=>set('name',e.target.value)} placeholder="e.g. Ali Yılmaz" /></Field></div>
+              <Field label="Company"><input className="inp" value={form.company} onChange={e=>set('company',e.target.value)} placeholder="Company"/></Field>
+              <Field label="Position"><input className="inp" value={form.position} onChange={e=>set('position',e.target.value)} placeholder="Job title"/></Field>
+              <Field label="Phone 1"><input className="inp" type="tel" value={form.phone1} onChange={e=>set('phone1',e.target.value)} placeholder="+90 5XX…"/></Field>
+              <Field label="Phone 2"><input className="inp" type="tel" value={form.phone2} onChange={e=>set('phone2',e.target.value)} placeholder="Optional"/></Field>
+              <Field label="Email"><input className="inp" type="email" value={form.email} onChange={e=>set('email',e.target.value)} placeholder="name@co.com"/></Field>
+              <Field label="Birthday"><input className="inp" type="date" value={form.birthday} onChange={e=>set('birthday',e.target.value)}/></Field>
+              <Field label="Category"><input className="inp" value={form.category} onChange={e=>set('category',e.target.value)} placeholder="Client, Partner…"/></Field>
+              <Field label="Contact Frequency *">
+                <select className="inp" value={form.frequency} onChange={e=>set('frequency',parseInt(e.target.value))}>
+                  {[30,60,90,180,360,720].map(f=><option key={f} value={f}>{f} days</option>)}
+                </select>
+              </Field>
+              <Field label="Last Contacted">
+                <input className="inp" type="date" value={lastDate} onChange={e=>addHistoryEntry(e.target.value)}/>
+              </Field>
+              <Field label="Planned to Contact">
+                <input className="inp" type="date" value={form.plannedContact} onChange={e=>set('plannedContact',e.target.value)}/>
+              </Field>
+              <div className="fg-full">
+                <Field label="Notes">
+                  <textarea className="inp" rows={3} value={form.notes} onChange={e=>set('notes',e.target.value)} placeholder="Background notes about this contact…"/>
+                </Field>
+              </div>
+            </div>
+          )}
+          {tab==='history' && (
+            <div>
+              {!(form.lastContactedHistory?.length) ? (
+                <div className="empty-sm">No contact history yet.</div>
+              ) : (
+                [...(form.lastContactedHistory)].reverse().map((h,i)=>(
+                  <div key={i} className="hist-row">
+                    <div className="hist-date">{window._fmtDate(h.date)}</div>
+                    {h.notes && <div className="hist-note">{h.notes}</div>}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+          {tab==='notes' && (
+            <Field label="Notes">
+              <textarea className="inp" style={{minHeight:180}} value={form.notes} onChange={e=>set('notes',e.target.value)} placeholder="General notes…"/>
+            </Field>
+          )}
+        </div>
+        <div className="modal-ft">
+          {isEdit && <button className="btn btn-danger" onClick={()=>{if(window.confirm('Delete this contact?')){onSave(null);onClose();}}}>Delete</button>}
+          <span style={{flex:1}}/>
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={handleSave}>{isEdit?'Save Changes':'Add Contact'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({label,children}) {
+  return <div className="field-g"><label className="field-lbl">{label}</label>{children}</div>;
+}
+
+/* ══════════════════════════════════════════
+   TodaysContactsModal — 3-step flow
+══════════════════════════════════════════ */
+function TodaysContactsModal({ contacts, onSave, onClose }) {
+  const [step, setStep]     = mUseState(1);
+  const [text, setText]     = mUseState('');
+  const [matches, setMatches] = mUseState([]);
+
+  const norm = s => s.toLowerCase()
+    .replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s')
+    .replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c')
+    .replace(/[^a-z0-9 ]/g,'').trim();
+
+  const score = (a, b) => {
+    const na=norm(a), nb=norm(b);
+    if (na===nb) return 1;
+    if (nb.includes(na)||na.includes(nb)) return .92;
+    const aw=na.split(' '), bw=nb.split(' ');
+    const wm = aw.filter(w=>bw.some(bx=>bx.includes(w)||w.includes(bx))).length;
+    if (wm>0) return .65 + wm/Math.max(aw.length,bw.length)*.25;
+    let ch=0; for(const c of na) if(nb.includes(c)) ch++;
+    return ch/Math.max(na.length,nb.length)*.55;
+  };
+
+  const parseInput = raw => {
+    const lines = raw.split('\n');
+    const entries = [];
+    let cur = null;
+    for (const line of lines) {
+      if (/^\s/.test(line) && line.trim() && cur) { cur.notes.push(line.trim()); }
+      else if (line.trim()) { if(cur) entries.push(cur); cur={nameRaw:line.trim(),notes:[]}; }
+    }
+    if (cur) entries.push(cur);
+    return entries;
+  };
+
+  const handlePreview = () => {
+    const entries = parseInput(text);
+    const ms = [];
+    for (const e of entries) {
+      const best = contacts.map(c=>({c,s:score(e.nameRaw,c.name)})).sort((a,b)=>b.s-a.s)[0];
+      const type = !best||best.s<0.4?'unknown':best.s>=0.88?'exact':'fuzzy';
+      if (type==='unknown' && ms.length>0) {
+        ms[ms.length-1].notes = [...ms[ms.length-1].notes, e.nameRaw, ...e.notes];
+      } else {
+        ms.push({...e, match:{contact:type==='unknown'?null:best.c, type}, checked:type!=='unknown'});
+      }
+    }
+    setMatches(ms);
+    setStep(2);
+  };
+
+  const handleSave = () => {
+    const d = new Date().toISOString().slice(0,10);
+    onSave(matches.filter(m=>m.checked&&m.match.contact).map(m=>({
+      contactId: m.match.contact.id,
+      date: d,
+      notes: m.notes.join(' ')
+    })));
+    setStep(3);
+  };
+
+  const saved = matches.filter(m=>m.checked&&m.match.contact).length;
+
+  return (
+    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{maxWidth:500}}>
+        <div className="modal-hd">
+          <span className="modal-title">📅 Today's Contacts — {window._fmtDate(new Date().toISOString().slice(0,10))}</span>
+          <button className="icon-btn" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          {step===1 && <>
+            <p style={{fontSize:13,color:'var(--t2)',marginBottom:12}}>Type contact names — one per line. Add notes on the next line(s) beneath each name.</p>
+            <textarea className="inp" style={{width:'100%',minHeight:160,fontFamily:'monospace',fontSize:13,lineHeight:1.6}}
+              value={text} onChange={e=>setText(e.target.value)}
+              placeholder={"Ali Yılmaz\nDiscussed Q2 proposal. Will follow up Friday.\n\nSara Demir\nQuick check-in. Interested in new line."}
+            />
+            <p style={{fontSize:12,color:'var(--t2)',marginTop:8}}>💡 Fuzzy matching handles typos and accents automatically.</p>
+          </>}
+          {step===2 && <>
+            <p style={{fontSize:13,color:'var(--t2)',marginBottom:12}}>{matches.length} entries found — uncheck any you don't want to update.</p>
+            {matches.map((m,i)=>(
+              <div key={i} style={{display:'flex',alignItems:'flex-start',gap:10,padding:'10px 0',borderBottom:'1px solid var(--bdr)'}}>
+                <input type="checkbox" checked={m.checked} disabled={m.match.type==='unknown'}
+                  onChange={e=>{const ms=[...matches];ms[i]={...ms[i],checked:e.target.checked};setMatches(ms);}}
+                  style={{marginTop:3,accentColor:'var(--accent)'}}/>
+                <div style={{flex:1}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                    <span style={{fontWeight:600}}>{m.match.contact?m.match.contact.name:m.nameRaw}</span>
+                    {m.match.type==='exact'  && <span className="badge badge-ok">✓ Exact</span>}
+                    {m.match.type==='fuzzy'  && <span className="badge badge-warn">~ Fuzzy: "{m.nameRaw}"</span>}
+                    {m.match.type==='unknown'&& <span className="badge badge-err">✗ Not found</span>}
+                  </div>
+                  {m.match.contact && <div style={{fontSize:12,color:'var(--t2)'}}>{m.match.contact.company}</div>}
+                  {m.notes.length>0 && <div style={{fontSize:12,color:'var(--t2)',marginTop:2,fontStyle:'italic'}}>"{m.notes.join(' ')}"</div>}
+                </div>
+              </div>
+            ))}
+          </>}
+          {step===3 && (
+            <div style={{textAlign:'center',padding:'32px 0'}}>
+              <div style={{fontSize:44,marginBottom:12}}>✓</div>
+              <div style={{fontSize:18,fontWeight:600,marginBottom:8}}>{saved} contact{saved!==1?'s':''} updated</div>
+              <div style={{fontSize:13,color:'var(--t2)'}}>Last contacted date set to today · Notes saved with timestamp</div>
+            </div>
+          )}
+        </div>
+        <div className="modal-ft">
+          {step===1 && <><button className="btn btn-ghost" onClick={onClose}>Cancel</button><button className="btn btn-primary" onClick={handlePreview} disabled={!text.trim()}>Preview Matches →</button></>}
+          {step===2 && <><button className="btn btn-ghost" onClick={()=>setStep(1)}>← Back</button><button className="btn btn-primary" onClick={handleSave}>Save Updates</button></>}
+          {step===3 && <button className="btn btn-primary" style={{width:'100%'}} onClick={onClose}>Done</button>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════
+   DeleteConfirmModal
+══════════════════════════════════════════ */
+function DeleteConfirmModal({ contacts, onConfirm, onClose }) {
+  return (
+    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{maxWidth:420}}>
+        <div className="modal-hd" style={{borderColor:'#fca5a5'}}>
+          <span className="modal-title" style={{color:'#dc2626'}}>⚠ Delete {contacts.length} contact{contacts.length>1?'s':''}?</span>
+          <button className="icon-btn" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <div style={{background:'#fef2f2',borderRadius:6,padding:'10px 12px',marginBottom:12}}>
+            {contacts.map(c=><div key={c.id} style={{fontSize:13,padding:'2px 0'}}>• {c.name} — {c.company}</div>)}
+          </div>
+          <div style={{fontSize:13,color:'#dc2626',fontWeight:500}}>This action cannot be undone.</div>
+        </div>
+        <div className="modal-ft">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn" style={{background:'#dc2626',color:'#fff',border:'none'}} onClick={onConfirm}>
+            Delete {contacts.length} Contact{contacts.length>1?'s':''}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════
+   ImportModal — Upload CSV  or  Paste Data
+══════════════════════════════════════════ */
+const FIELD_OPTS = [
+  {k:'_skip',      l:'— Skip column —'},
+  {k:'name',       l:'Name'},
+  {k:'company',    l:'Company'},
+  {k:'position',   l:'Position'},
+  {k:'phone1',     l:'Phone 1'},
+  {k:'phone2',     l:'Phone 2'},
+  {k:'email',      l:'Email'},
+  {k:'birthday',   l:'Birthday'},
+  {k:'category',   l:'Category'},
+  {k:'frequency',  l:'Frequency (days)'},
+  {k:'lastContacted', l:'Last Contacted'},
+  {k:'plannedContact',l:'Planned Contact'},
+  {k:'notes',      l:'Notes'},
+];
+
+const HDR_ALIASES = {
+  name:['name','isim','ad soyad','ad','full name','contact name','contact','kişi'],
+  company:['company','şirket','firma','sirket','kurum','organization','org'],
+  position:['position','pozisyon','unvan','title','job title','görev'],
+  phone1:['phone1','phone','telefon','tel','mobile','cep','gsm','phone 1','tel1'],
+  phone2:['phone2','phone 2','tel2','ikinci telefon'],
+  email:['email','e-mail','e mail','eposta','e-posta','mail'],
+  birthday:['birthday','doğum','dogum','birthdate','date of birth','dob'],
+  category:['category','kategori','grup','group','type','tür'],
+  frequency:['frequency','frekans','sıklık','siklık','contact frequency','freq'],
+  lastContacted:['lastcontacted','last contacted','son temas','son iletişim','last contact date','last contact'],
+  plannedContact:['plannedcontact','planned contact','planlanan','planned','plan'],
+  notes:['notes','notlar','not','comments','yorum','açıklama'],
+};
+
+function guessField(raw) {
+  const n = raw.toLowerCase().trim().replace(/[^a-z0-9ğüşıöç ]/g,'');
+  for (const [key, aliases] of Object.entries(HDR_ALIASES)) {
+    if (aliases.some(a => n===a || n.includes(a) || a.includes(n))) return key;
+  }
+  return '_skip';
+}
+
+function parseRows(text) {
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l=>l.trim());
+  if (!lines.length) return {headers:[], rows:[]};
+  const sample = lines[0];
+  const delim = sample.includes('\t') ? '\t' : sample.includes(';') ? ';' : ',';
+  const splitLine = line => {
+    const vals=[]; let cur='', inQ=false;
+    for(const ch of line){
+      if(ch==='"') inQ=!inQ;
+      else if(ch===delim&&!inQ){vals.push(cur.trim());cur='';}
+      else cur+=ch;
+    }
+    vals.push(cur.trim());
+    return vals;
+  };
+  const headers = splitLine(lines[0]);
+  const rows = lines.slice(1).map(l => splitLine(l));
+  return {headers, rows, delim};
+}
+
+function buildContacts(rows, headers, mapping) {
+  return rows.map((vals,i)=>{
+    const o={};
+    headers.forEach((h,j)=>{ const fk=mapping[j]; if(fk&&fk!=='_skip') o[fk]=vals[j]||''; });
+    if(!o.name) return null;
+    return {
+      id: Date.now()+'-'+i,
+      name:o.name||'', company:o.company||'', position:o.position||'',
+      phone1:o.phone1||'', phone2:o.phone2||'', email:o.email||'',
+      birthday:o.birthday||'', category:o.category||'',
+      frequency:parseInt(o.frequency)||30,
+      lastContactedHistory:o.lastContacted?[{date:o.lastContacted,notes:'Imported'}]:[],
+      plannedContact:o.plannedContact||'', notes:o.notes||''
+    };
+  }).filter(Boolean);
+}
+
+function ImportModal({ onImport, onClose }) {
+  const [tab, setTab]       = mUseState('upload');
+  const [file, setFile]     = mUseState(null);
+  const [status, setStatus] = mUseState('idle');
+
+  const [pasteText, setPasteText]   = mUseState('');
+  const [parsed, setParsed]         = mUseState(null);
+  const [mapping, setMapping]       = mUseState({});
+  const [pasteStatus, setPasteStatus] = mUseState('');
+
+  const downloadTemplate = () => {
+    const h = ['name','company','position','phone1','phone2','email','birthday','category','frequency','lastContacted','plannedContact','notes'];
+    const s = ['Ali Yılmaz','Arçelik','VP Sales','+90 532 111 2233','','ali@arcelik.com','1980-03-15','Client','30','2026-04-01','2026-04-25','Key contact'];
+    const csv = [h.join(','), s.join(',')].join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download = 'ContactApp_Template.csv'; a.click();
+  };
+
+  const handleFile = e => {
+    const f = e.target.files[0]; if(!f) return;
+    setFile(f);
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const buf = ev.target.result;
+        let raw = null;
+        for (const enc of ['utf-8', 'windows-1254', 'iso-8859-9']) {
+          try { raw = new TextDecoder(enc, {fatal: enc==='utf-8'}).decode(buf); break; } catch { raw = null; }
+        }
+        if (!raw) { setStatus('error'); return; }
+        raw = raw.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+        const lines = raw.split('\n').filter(l=>l.trim());
+        const delim = lines[0].includes(';') ? ';' : ',';
+        const hdrs = lines[0].split(delim).map(h=>h.trim().replace(/[\r\n\uFEFF\u200B]/g,''));
+        const imported = lines.slice(1).map((line,i)=>{
+          const vals=[]; let cur='', inQ=false;
+          for(const ch of line){
+            if(ch==='"') inQ=!inQ;
+            else if(ch===delim&&!inQ){vals.push(cur.trim());cur='';}
+            else cur+=ch;
+          }
+          vals.push(cur.trim());
+          const o={}; hdrs.forEach((h,j)=>o[h]=vals[j]||'');
+          return {
+            id: Date.now()+'-'+i, name:o.name||'', company:o.company||'',
+            position:o.position||'', phone1:o.phone1||'', phone2:o.phone2||'',
+            email:o.email||'', birthday:o.birthday||'', category:o.category||'',
+            frequency:parseInt(o.frequency)||30,
+            lastContactedHistory:o.lastContacted?[{date:o.lastContacted,notes:'Imported'}]:[],
+            plannedContact:o.plannedContact||'', notes:o.notes||''
+          };
+        }).filter(c=>c.name);
+        if(imported.length===0){ setStatus('empty:'+hdrs.join('|')); return; }
+        onImport(imported); setStatus('success:'+imported.length);
+      } catch(err){ setStatus('error:'+err.message); }
+    };
+    reader.readAsArrayBuffer(f);
+  };
+
+  const handlePasteChange = text => {
+    setPasteText(text);
+    setPasteStatus('');
+    if (!text.trim()) { setParsed(null); return; }
+    const {headers, rows} = parseRows(text);
+    if (!headers.length) { setParsed(null); return; }
+    const allLooksLikeHeaders = headers.every(h => !/^\d{4}-\d{2}-\d{2}$/.test(h) && isNaN(Number(h)));
+    const autoMapping = {};
+    headers.forEach((h, i) => { autoMapping[i] = guessField(h); });
+    const hasHeaders = allLooksLikeHeaders && Object.values(autoMapping).some(v=>v!=='_skip');
+    if (hasHeaders) {
+      setParsed({headers, rows, hasHeaders:true});
+      setMapping(autoMapping);
+    } else {
+      const genericHdrs = headers.map((_,i)=>`Column ${i+1}`);
+      setParsed({headers: genericHdrs, rows:[headers,...rows], hasHeaders:false});
+      setMapping(Object.fromEntries(genericHdrs.map((_,i)=>[i,'_skip'])));
+    }
+  };
+
+  const handlePasteImport = () => {
+    if (!parsed) return;
+    const contacts = buildContacts(parsed.rows.slice(0,500), parsed.headers, mapping);
+    if (!contacts.length) { setPasteStatus('No contacts found — make sure a column is mapped to "Name".'); return; }
+    onImport(contacts);
+    setPasteStatus('success:'+contacts.length);
+  };
+
+  const previewRows = parsed ? parsed.rows.slice(0,4) : [];
+
+  return (
+    <div className="overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{maxWidth:580}}>
+        <div className="modal-hd">
+          <span className="modal-title">Import Contacts</span>
+          <button className="icon-btn" onClick={onClose}>✕</button>
+        </div>
+        <div className="tab-row">
+          <button className={`tab-pill ${tab==='upload'?'active':''}`} onClick={()=>setTab('upload')}>Upload CSV</button>
+          <button className={`tab-pill ${tab==='paste'?'active':''}`} onClick={()=>setTab('paste')}>Paste from Excel</button>
+        </div>
+
+        {tab==='upload' && (
+          <div className="modal-body">
+            <p style={{fontSize:13,color:'var(--t2)',marginBottom:16}}>Upload a CSV file. Download the template to see the required format.</p>
+            <button className="btn btn-ghost" style={{width:'100%',justifyContent:'center',marginBottom:16}} onClick={downloadTemplate}>⬇ Download CSV Template</button>
+            <label htmlFor="csv-upload" style={{display:'block',border:'2px dashed var(--bdr)',borderRadius:8,padding:24,textAlign:'center',cursor:'pointer',fontSize:13,color:'var(--t2)',transition:'border-color .15s'}}
+              onMouseEnter={e=>e.currentTarget.style.borderColor='var(--accent)'}
+              onMouseLeave={e=>e.currentTarget.style.borderColor='var(--bdr)'}>
+              {file ? `📄 ${file.name}` : '📂 Click to choose CSV file'}
+            </label>
+            <input type="file" id="csv-upload" accept=".csv,.xlsx" onChange={handleFile} style={{display:'none'}}/>
+            {status.startsWith('success') && <div style={{marginTop:12,padding:'10px 12px',background:'#dcfce7',borderRadius:6,fontSize:13,color:'#166534'}}>✓ {status.split(':')[1]} contact{status.split(':')[1]!=='1'?'s':''} imported!</div>}
+            {status.startsWith('empty')   && <div style={{marginTop:12,padding:'10px 12px',background:'#fef9c3',borderRadius:6,fontSize:13,color:'#854d0e'}}>⚠ No contacts found. Headers detected: <strong>{status.split(':')[1]}</strong>.</div>}
+            {status.startsWith('error')   && <div style={{marginTop:12,padding:'10px 12px',background:'#fef2f2',borderRadius:6,fontSize:13,color:'#991b1b'}}>⚠ Error: {status.split(':')[1]||'Please use the CSV template.'}</div>}
+          </div>
+        )}
+
+        {tab==='paste' && (
+          <div className="modal-body">
+            <p style={{fontSize:13,color:'var(--t2)',marginBottom:10}}>
+              Copy rows in Excel and paste below. The app detects columns automatically.
+            </p>
+            <textarea className="inp" style={{width:'100%',minHeight:100,fontFamily:'monospace',fontSize:12,lineHeight:1.5}}
+              value={pasteText}
+              onChange={e=>handlePasteChange(e.target.value)}
+              placeholder="Paste Excel rows here (Ctrl+V)…"
+            />
+
+            {parsed && <>
+              <div style={{marginTop:14,marginBottom:8,fontSize:12,fontWeight:600,color:'var(--t2)'}}>Map columns to contact fields:</div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:8,marginBottom:14}}>
+                {parsed.headers.map((h,i)=>(
+                  <div key={i} style={{background:'var(--bg)',borderRadius:6,padding:'8px 10px',border:'1px solid var(--bdr)'}}>
+                    <div style={{fontSize:11,fontWeight:600,color:'var(--t2)',marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={h}>{h}</div>
+                    <select className="inp" style={{padding:'3px 6px',fontSize:12}} value={mapping[i]||'_skip'} onChange={e=>{
+                      setMapping(m=>({...m,[i]:e.target.value}));
+                    }}>
+                      {FIELD_OPTS.map(f=><option key={f.k} value={f.k}>{f.l}</option>)}
+                    </select>
+                    {previewRows[0] && <div style={{fontSize:11,color:'var(--t3)',marginTop:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={previewRows[0][i]}>{previewRows[0][i]||'—'}</div>}
+                  </div>
+                ))}
+              </div>
+
+              <div style={{fontSize:12,fontWeight:600,color:'var(--t2)',marginBottom:6}}>Preview ({Math.min(parsed.rows.length,500)} rows):</div>
+              <div style={{overflowX:'auto',border:'1px solid var(--bdr)',borderRadius:6,marginBottom:14}}>
+                <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                  <thead>
+                    <tr>{parsed.headers.map((h,i)=><th key={i} style={{background:'#f1f5f9',padding:'5px 8px',textAlign:'left',fontWeight:600,color:'var(--t2)',whiteSpace:'nowrap',borderBottom:'1px solid var(--bdr)'}}>{FIELD_OPTS.find(f=>f.k===mapping[i])?.l||h}</th>)}</tr>
+                  </thead>
+                  <tbody>
+                    {previewRows.map((r,i)=>(
+                      <tr key={i}>{r.map((v,j)=><td key={j} style={{padding:'5px 8px',borderBottom:'1px solid var(--bdr)',maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{v||'—'}</td>)}</tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {pasteStatus.startsWith('success') && <div style={{marginBottom:12,padding:'10px 12px',background:'#dcfce7',borderRadius:6,fontSize:13,color:'#166534'}}>✓ {pasteStatus.split(':')[1]} contact{pasteStatus.split(':')[1]!=='1'?'s':''} imported!</div>}
+              {pasteStatus&&!pasteStatus.startsWith('success') && <div style={{marginBottom:12,padding:'10px 12px',background:'#fef2f2',borderRadius:6,fontSize:13,color:'#991b1b'}}>⚠ {pasteStatus}</div>}
+            </>}
+          </div>
+        )}
+
+        <div className="modal-ft">
+          {tab==='paste' && parsed && !pasteStatus.startsWith('success') &&
+            <button className="btn btn-primary" onClick={handlePasteImport}>
+              Import {Math.min(parsed.rows.length,500)} Contact{parsed.rows.length!==1?'s':''}
+            </button>
+          }
+          <button className="btn btn-ghost" style={{marginLeft:'auto'}} onClick={onClose}>
+            {pasteStatus.startsWith('success')||status.startsWith('success') ? 'Done' : 'Cancel'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { ContactModal, TodaysContactsModal, DeleteConfirmModal, ImportModal });
+</script>
+
+<!-- ══════════════════ MAIN APP ══════════════════ -->
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* ── helpers ── */
+const fmtDate = w => {
+  if (!w) return '—';
+  return new Date(w+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+};
+window._fmtDate = fmtDate;
+
+const today = () => new Date().toISOString().slice(0,10);
+
+const daysSince = d => {
+  if (!d) return 9999;
+  return Math.floor((Date.now() - new Date(d+'T12:00:00').getTime()) / 86400000);
+};
+
+const getStatus = c => {
+  const hist = c.lastContactedHistory || [];
+  if (!hist.length) return 'reach';
+  const last = hist[hist.length-1].date;
+  const days = daysSince(last);
+  const f = parseInt(c.frequency);
+  if (days >= f) return 'reach';
+  if (days >= f * 0.75) return 'soon';
+  return 'ok';
+};
+
+const STATUS_ORDER = {reach:0,soon:1,ok:2};
+const FREQ_ORDER   = {30:0,60:1,90:2,180:3,360:4,720:5};
+
+/* ── sample data ── */
+const SAMPLE = [
+  {id:'1',name:'Ali Yılmaz',company:'Arçelik',position:'VP Sales',phone1:'+90 532 111 2233',phone2:'',email:'ali@arcelik.com',birthday:'1980-04-20',category:'Client',frequency:30,plannedContact:'2026-04-25',notes:'Key decision maker. Prefers morning calls.',lastContactedHistory:[{date:'2026-03-18',notes:'Discussed Q2 targets'}]},
+  {id:'2',name:'Sara Demir',company:'Koç Holding',position:'Director',phone1:'+90 533 222 3344',phone2:'+90 212 333 4455',email:'sara.demir@koc.com',birthday:'1985-04-25',category:'Partner',frequency:30,plannedContact:'',notes:'Interested in new product line.',lastContactedHistory:[{date:'2026-03-25',notes:'Quick check-in'}]},
+  {id:'3',name:'Emre Kaya',company:'Turkcell',position:'Product Manager',phone1:'+90 532 444 5566',phone2:'',email:'emre.kaya@turkcell.com',birthday:'1990-05-02',category:'Client',frequency:30,plannedContact:'2026-04-28',notes:'',lastContactedHistory:[{date:'2026-04-05',notes:'Demo call'}]},
+  {id:'4',name:'Zeynep Arslan',company:'Migros',position:'CMO',phone1:'+90 534 555 6677',phone2:'',email:'z.arslan@migros.com',birthday:'1978-11-30',category:'Client',frequency:30,plannedContact:'',notes:'Potential expansion in Q3',lastContactedHistory:[{date:'2026-04-10',notes:'Met at conference'}]},
+  {id:'5',name:'Mehmet Öz',company:'Sabancı Holding',position:'CFO',phone1:'+90 532 666 7788',phone2:'',email:'mehmet.oz@sabanci.com',birthday:'1975-05-10',category:'Investor',frequency:60,plannedContact:'',notes:'Very busy. Email first.',lastContactedHistory:[{date:'2026-02-05',notes:'Investment committee'}]},
+  {id:'6',name:'Ayşe Çelik',company:'İşbank',position:'Branch Manager',phone1:'+90 533 777 8899',phone2:'',email:'ayse.celik@isbank.com',birthday:'1982-09-14',category:'Partner',frequency:60,plannedContact:'2026-05-05',notes:'',lastContactedHistory:[{date:'2026-03-20',notes:'Loan renewal discussion'}]},
+  {id:'7',name:'Can Yıldız',company:'Garanti BBVA',position:'Relationship Manager',phone1:'+90 534 888 9900',phone2:'',email:'can.yildiz@garanti.com',birthday:'',category:'Partner',frequency:60,plannedContact:'',notes:'Follow up on credit line',lastContactedHistory:[{date:'2026-02-28',notes:'Annual review'}]},
+  {id:'8',name:'Fatma Şahin',company:'Bosch Turkey',position:'Sales Director',phone1:'+90 532 100 2030',phone2:'',email:'f.sahin@bosch.com',birthday:'1983-04-08',category:'Client',frequency:90,plannedContact:'',notes:'',lastContactedHistory:[{date:'2026-02-01',notes:'Product catalog review'}]},
+  {id:'9',name:'Oğuz Karan',company:'Vestel',position:'Head of Procurement',phone1:'+90 533 200 3040',phone2:'',email:'oguz.karan@vestel.com',birthday:'',category:'Client',frequency:90,plannedContact:'2026-05-10',notes:'Tender opening in June',lastContactedHistory:[{date:'2026-03-01',notes:'Tender pre-meeting'}]},
+  {id:'10',name:'Deniz Korkmaz',company:'Akbank',position:'Private Banker',phone1:'+90 534 300 4050',phone2:'',email:'deniz.k@akbank.com',birthday:'1990-12-01',category:'Partner',frequency:90,plannedContact:'',notes:'',lastContactedHistory:[{date:'2026-01-20',notes:'Portfolio review'}]},
+  {id:'11',name:'Hakan Doğan',company:'Enerjisa',position:'VP Strategy',phone1:'+90 532 400 5060',phone2:'',email:'h.dogan@enerjisa.com',birthday:'1977-08-25',category:'Prospect',frequency:180,plannedContact:'',notes:'Renewable energy projects',lastContactedHistory:[{date:'2025-10-01',notes:'Initial meeting'}]},
+  {id:'12',name:'Selin Aktaş',company:'Türk Telekom',position:'Enterprise Account Mgr',phone1:'+90 533 500 6070',phone2:'',email:'s.aktas@tt.com',birthday:'',category:'Client',frequency:180,plannedContact:'2026-06-01',notes:'',lastContactedHistory:[{date:'2026-01-10',notes:'Contract renewal signed'}]},
+  {id:'13',name:'Burak Öztürk',company:'TAV Airports',position:'Business Dev Manager',phone1:'+90 534 600 7080',phone2:'',email:'burak.ozturk@tav.com',birthday:'1985-02-14',category:'Partner',frequency:360,plannedContact:'',notes:'Annual review in autumn',lastContactedHistory:[{date:'2025-04-01',notes:'Partnership renewal'}]},
+  {id:'14',name:'Nilüfer Erdoğan',company:'Anadolu Grubu',position:'CEO Office',phone1:'+90 532 700 8090',phone2:'',email:'n.erdogan@anadolugrubu.com',birthday:'1972-06-20',category:'Investor',frequency:360,plannedContact:'',notes:'Strategic alliance discussions',lastContactedHistory:[{date:'2025-11-15',notes:'Board meeting'}]},
+  {id:'15',name:'Tarık Bora',company:'İstanbul Finans',position:'Senior Advisor',phone1:'+90 533 800 9000',phone2:'',email:'tarik.bora@ifm.com',birthday:'',category:'Mentor',frequency:720,plannedContact:'',notes:'Annual catch-up',lastContactedHistory:[{date:'2024-04-01',notes:'Lunch meeting'}]},
+];
+
+/* ── persistence hook ── */
+function useLS(key, def) {
+  const [v, setV] = useState(() => {
+    try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : def; } catch { return def; }
+  });
+  const set = val => setV(prev => {
+    const next = typeof val === 'function' ? val(prev) : val;
+    try { localStorage.setItem(key, JSON.stringify(next)); } catch {}
+    return next;
+  });
+  return [v, set];
+}
+
+/* ══════════════════ SETUP / LOADING SCREENS ══════════════════ */
+function SetupScreen() {
+  return (
+    <div className="login-page">
+      <div className="login-card">
+        <div className="login-logo">
+          <div className="login-logo-icon" style={{background:'#f59e0b'}}>!</div>
+          <h1>Firebase Setup Required</h1>
+          <p>One-time configuration needed</p>
+        </div>
+        <div style={{fontSize:13,color:'var(--t2)',lineHeight:1.8}}>
+          <p style={{marginBottom:10}}>Open <code style={{background:'var(--bg)',padding:'1px 5px',borderRadius:4}}>ContactApp.html</code> in a text editor, find the <code style={{background:'var(--bg)',padding:'1px 5px',borderRadius:4}}>firebaseConfig</code> block near the top, and replace every <code style={{background:'var(--bg)',padding:'1px 5px',borderRadius:4}}>PASTE_..._HERE</code> value with your Firebase project credentials.</p>
+          <ol style={{paddingLeft:20,lineHeight:2.2}}>
+            <li>Go to <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" style={{color:'var(--accent)'}}>console.firebase.google.com</a></li>
+            <li>Create a project → Add a <strong>Web app</strong></li>
+            <li>Copy the config object shown and paste into the file</li>
+            <li>Enable <strong>Authentication → Email/Password</strong></li>
+            <li>Create a <strong>Realtime Database</strong> (test mode is fine)</li>
+            <li>Save the file and refresh</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LoadingScreen({ message }) {
+  return (
+    <div className="login-page">
+      <div style={{textAlign:'center',color:'#94a3b8'}}>
+        <div style={{fontSize:32,marginBottom:12,animation:'spin 1s linear infinite'}}>↻</div>
+        <div style={{fontSize:14}}>{message || 'Loading…'}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════ LOGIN ══════════════════ */
+function LoginScreen({ onLogin, onSignUp, onReset }) {
+  const [email, setEmail]     = useState('');
+  const [pass, setPass]       = useState('');
+  const [err, setErr]         = useState('');
+  const [mode, setMode]       = useState('login'); // login | signup | reset | sent
+  const [busy, setBusy]       = useState(false);
+
+  // signup-only fields
+  const [name, setName]       = useState('');
+  const [confirm, setConfirm] = useState('');
+
+  const switchMode = m => { setErr(''); setMode(m); };
+
+  const wrap = async fn => {
+    setBusy(true); setErr('');
+    try { await fn(); }
+    catch (e) {
+      setErr(e.message.replace('Firebase: ','').replace(/\s*\(auth\/[^)]+\)\.?\s*/g,'').trim());
+    }
+    finally { setBusy(false); }
+  };
+
+  const handleLogin  = e => { e.preventDefault(); wrap(() => onLogin(email, pass)); };
+  const handleReset  = e => { e.preventDefault(); wrap(async () => { await onReset(email); switchMode('sent'); }); };
+  const handleSignUp = e => {
+    e.preventDefault();
+    if (!name.trim())         { setErr('Name is required.'); return; }
+    if (!email.includes('@')) { setErr('Enter a valid email address.'); return; }
+    if (pass.length < 6)      { setErr('Password must be at least 6 characters.'); return; }
+    if (pass !== confirm)     { setErr('Passwords do not match.'); return; }
+    wrap(() => onSignUp(name.trim(), email.trim().toLowerCase(), pass));
+  };
+
+  return (
+    <div className="login-page">
+      <div className="login-card">
+        <div className="login-logo">
+          <div className="login-logo-icon">C</div>
+          <h1>ContactApp</h1>
+          <p>Personal CRM &amp; Relationship Manager</p>
+        </div>
+
+        {mode === 'login' && <>
+          {err && <div className="login-err">{err}</div>}
+          <form onSubmit={handleLogin}>
+            <div className="field-g" style={{marginBottom:12}}>
+              <label className="field-lbl">Email</label>
+              <input className="inp" type="email" value={email} onChange={e=>{setEmail(e.target.value);setErr('')}} placeholder="your@email.com" autoComplete="email" disabled={busy}/>
+            </div>
+            <div className="field-g" style={{marginBottom:20}}>
+              <label className="field-lbl">Password</label>
+              <input className="inp" type="password" value={pass} onChange={e=>{setPass(e.target.value);setErr('')}} placeholder="••••••••" autoComplete="current-password" disabled={busy}/>
+            </div>
+            <button type="submit" className="btn btn-primary" style={{width:'100%',height:40,fontSize:14}} disabled={busy}>
+              {busy ? 'Logging in…' : 'Log In'}
+            </button>
+          </form>
+          <div style={{textAlign:'center',marginTop:14,display:'flex',alignItems:'center',justifyContent:'center',gap:12}}>
+            <button className="login-link" onClick={()=>switchMode('reset')} disabled={busy}>Forgot password?</button>
+            <span style={{color:'var(--bdr)'}}>|</span>
+            <button className="login-link" onClick={()=>switchMode('signup')} disabled={busy}>Create account</button>
+          </div>
+        </>}
+
+        {mode === 'signup' && <>
+          {err && <div className="login-err">{err}</div>}
+          <form onSubmit={handleSignUp}>
+            <div className="field-g" style={{marginBottom:12}}>
+              <label className="field-lbl">Full Name</label>
+              <input className="inp" type="text" value={name} onChange={e=>{setName(e.target.value);setErr('')}} placeholder="Ali Yılmaz" autoComplete="name" autoFocus disabled={busy}/>
+            </div>
+            <div className="field-g" style={{marginBottom:12}}>
+              <label className="field-lbl">Email</label>
+              <input className="inp" type="email" value={email} onChange={e=>{setEmail(e.target.value);setErr('')}} placeholder="your@email.com" autoComplete="email" disabled={busy}/>
+            </div>
+            <div className="field-g" style={{marginBottom:12}}>
+              <label className="field-lbl">Password</label>
+              <input className="inp" type="password" value={pass} onChange={e=>{setPass(e.target.value);setErr('')}} placeholder="Min. 6 characters" autoComplete="new-password" disabled={busy}/>
+            </div>
+            <div className="field-g" style={{marginBottom:20}}>
+              <label className="field-lbl">Confirm Password</label>
+              <input className="inp" type="password" value={confirm} onChange={e=>{setConfirm(e.target.value);setErr('')}} placeholder="Repeat password" autoComplete="new-password" disabled={busy}/>
+            </div>
+            <button type="submit" className="btn btn-primary" style={{width:'100%',height:40,fontSize:14}} disabled={busy}>
+              {busy ? 'Creating account…' : 'Create Account'}
+            </button>
+          </form>
+          <div style={{textAlign:'center',marginTop:14}}>
+            <button className="login-link" onClick={()=>switchMode('login')} disabled={busy}>← Back to login</button>
+          </div>
+        </>}
+
+        {mode === 'reset' && <>
+          <p style={{fontSize:13,color:'var(--t2)',marginBottom:16}}>Enter your email and we'll send a reset link.</p>
+          <form onSubmit={handleReset}>
+            <div className="field-g" style={{marginBottom:16}}>
+              <label className="field-lbl">Email</label>
+              <input className="inp" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="your@email.com" disabled={busy}/>
+            </div>
+            <button type="submit" className="btn btn-primary" style={{width:'100%',height:40}} disabled={busy}>
+              {busy ? 'Sending…' : 'Send Reset Link'}
+            </button>
+          </form>
+          <div style={{textAlign:'center',marginTop:12}}>
+            <button className="login-link" onClick={()=>switchMode('login')}>← Back to login</button>
+          </div>
+        </>}
+
+        {mode === 'sent' && <>
+          <div style={{textAlign:'center',padding:'12px 0 20px'}}>
+            <div style={{fontSize:36,marginBottom:10}}>📧</div>
+            <div style={{fontWeight:600,marginBottom:6}}>Reset link sent</div>
+            <div style={{fontSize:13,color:'var(--t2)',marginBottom:20}}>Check your inbox at {email}</div>
+            <button className="login-link" onClick={()=>switchMode('login')}>← Back to login</button>
+          </div>
+        </>}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════ BIRTHDAY UTILS ══════════════════ */
+const daysUntilBirthday = bday => {
+  if (!bday) return null;
+  const [y, m, d] = bday.split('-').map(Number);
+  const now = new Date(); now.setHours(0,0,0,0);
+  const thisYear = new Date(now.getFullYear(), m-1, d);
+  if (thisYear < now) thisYear.setFullYear(now.getFullYear()+1);
+  return Math.round((thisYear - now) / 86400000);
+};
+const birthdayLabel = days => {
+  if (days === 0) return '🎂 Today!';
+  if (days === 1) return '🎂 Tomorrow';
+  if (days <= 7)  return `🎂 in ${days}d`;
+  return `🎂 ${days}d`;
+};
+const upcomingBirthdays = (contacts, withinDays=30) =>
+  contacts
+    .filter(c => c.birthday && daysUntilBirthday(c.birthday) !== null && daysUntilBirthday(c.birthday) <= withinDays)
+    .map(c => ({...c, daysLeft: daysUntilBirthday(c.birthday)}))
+    .sort((a,b) => a.daysLeft - b.daysLeft);
+
+
+function Sidebar({ contacts, freqFilter, setFreqFilter, statusFilter, setStatusFilter, user, onLogout, onEditContact }) {
+  const allFreqs   = [30,60,90,180,360,720];
+  const allStatuses = ['reach','soon','ok'];
+  const statusLabel = {reach:'Reach',soon:'Soon',ok:'OK'};
+  const statusColor = {reach:'var(--reach)',soon:'var(--soon)',ok:'var(--ok)'};
+
+  const countByFreq   = f => contacts.filter(c=>c.frequency===f).length;
+  const countByStatus = s => contacts.filter(c=>getStatus(c)===s).length;
+
+  const toggleFreq = f => setFreqFilter(prev => prev.includes(f) ? prev.filter(x=>x!==f) : [...prev,f]);
+  const toggleStat = s => setStatusFilter(prev => prev.includes(s) ? prev.filter(x=>x!==s) : [...prev,s]);
+
+  const initials = user?.name?.split(' ').map(w=>w[0]).slice(0,2).join('') || 'U';
+  const upcoming = upcomingBirthdays(contacts, 30);
+
+  return (
+    <div className="sidebar">
+      <div className="sb-logo">
+        <div className="sb-logo-dot">C</div>
+        <span>ContactApp</span>
+      </div>
+
+      <div className="sb-sec">
+        <div className="sb-sec-title">Frequency</div>
+        {allFreqs.map(f => (
+          <label key={f} className="sb-item">
+            <input type="checkbox" checked={freqFilter.includes(f)} onChange={()=>toggleFreq(f)}/>
+            <span>{f} days</span>
+            <span className="sb-count">{countByFreq(f)}</span>
+          </label>
+        ))}
+      </div>
+
+      <div className="sb-sec" style={{marginTop:8}}>
+        <div className="sb-sec-title">Status</div>
+        {allStatuses.map(s => (
+          <label key={s} className="sb-item">
+            <input type="checkbox" checked={statusFilter.includes(s)} onChange={()=>toggleStat(s)}/>
+            <span className="sb-dot" style={{background:statusColor[s]}}></span>
+            <span>{statusLabel[s]}</span>
+            <span className="sb-count">{countByStatus(s)}</span>
+          </label>
+        ))}
+      </div>
+
+      {upcoming.length > 0 && (
+        <div className="sb-sec" style={{marginTop:8}}>
+          <div className="sb-sec-title">🎂 Upcoming Birthdays</div>
+          {upcoming.map(c => (
+            <div key={c.id} className="sb-item" style={{cursor:'pointer',flexDirection:'column',alignItems:'flex-start',gap:2,padding:'6px 8px'}}
+              onClick={()=>onEditContact&&onEditContact(c)}>
+              <div style={{display:'flex',alignItems:'center',gap:6,width:'100%'}}>
+                <span style={{flex:1,color:c.daysLeft===0?'#fbbf24':'#cbd5e1',fontWeight:c.daysLeft===0?700:400,fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{c.name}</span>
+                <span style={{fontSize:11,background:c.daysLeft===0?'#fbbf24':c.daysLeft<=7?'#f59e0b':'var(--sb2)',color:c.daysLeft<=7?'#1a1a1a':'var(--sb3)',padding:'1px 7px',borderRadius:20,whiteSpace:'nowrap',flexShrink:0}}>
+                  {birthdayLabel(c.daysLeft)}
+                </span>
+              </div>
+              {c.company && <div style={{fontSize:11,color:'var(--sb3)',paddingLeft:0}}>{c.company}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="sb-footer">
+        <div className="sb-user">
+          <div className="avatar">{initials}</div>
+          <div>
+            <div style={{color:'#e2e8f0',fontWeight:500}}>{user?.name}</div>
+            <div style={{fontSize:11,color:'var(--sb3)'}}>{user?.email}</div>
+          </div>
+        </div>
+        <div className="sb-logout" onClick={onLogout}>Log out →</div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════ MOBILE HOOK ══════════════════ */
+function useIsMobile() {
+  const [mobile, setMobile] = useState(window.innerWidth <= 768);
+  useEffect(() => {
+    const fn = () => setMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+  return mobile;
+}
+
+/* ══════════════════ AVATAR COLOR ══════════════════ */
+const AVATAR_COLORS = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444','#06b6d4','#6366f1'];
+const avatarColor = name => AVATAR_COLORS[(name.charCodeAt(0)||0) % AVATAR_COLORS.length];
+const initials = name => name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+
+/* ══════════════════ FILTER DRAWER ══════════════════ */
+function FilterDrawer({ contacts, freqFilter, setFreqFilter, statusFilter, setStatusFilter, onClose }) {
+  const allFreqs    = [30,60,90,180,360,720];
+  const allStatuses = ['reach','soon','ok'];
+  const statusLabel = {reach:'Reach',soon:'Soon',ok:'OK'};
+  const statusColor = {reach:'var(--reach)',soon:'var(--soon)',ok:'var(--ok)'};
+  const countByFreq = f => contacts.filter(c=>c.frequency===f).length;
+  const toggleFreq  = f => setFreqFilter(p=>p.includes(f)?p.filter(x=>x!==f):[...p,f]);
+  const toggleStat  = s => setStatusFilter(p=>p.includes(s)?p.filter(x=>x!==s):[...p,s]);
+  const allFreqOn   = allFreqs.every(f=>freqFilter.includes(f));
+  const allStatOn   = allStatuses.every(s=>statusFilter.includes(s));
+
+  return (
+    <div className="filter-drawer-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="filter-drawer">
+        <div className="filter-drawer-handle"/>
+        <div className="filter-drawer-hd">
+          <span style={{fontSize:15,fontWeight:600}}>Filter Contacts</span>
+          <button className="icon-btn" onClick={onClose}>✕</button>
+        </div>
+        <div className="filter-drawer-body">
+          <div className="filter-section-title">Frequency</div>
+          <div className="filter-chip-row">
+            <span className={`filter-chip ${allFreqOn?'on':''}`} onClick={()=>setFreqFilter(allFreqOn?[]:[...allFreqs])}>All</span>
+            {allFreqs.map(f=>(
+              <span key={f} className={`filter-chip ${freqFilter.includes(f)?'on':''}`} onClick={()=>toggleFreq(f)}>
+                {f}d <span style={{opacity:.6,fontSize:11}}>({countByFreq(f)})</span>
+              </span>
+            ))}
+          </div>
+          <div className="filter-section-title">Status</div>
+          <div className="filter-chip-row">
+            <span className={`filter-chip ${allStatOn?'on':''}`} onClick={()=>setStatusFilter(allStatOn?[]:[...allStatuses])}>All</span>
+            {allStatuses.map(s=>(
+              <span key={s} className={`filter-chip ${statusFilter.includes(s)?'on':''}`} onClick={()=>toggleStat(s)}
+                style={statusFilter.includes(s)?{borderColor:statusColor[s],background:s==='reach'?'#fef2f2':s==='soon'?'#fffbeb':'#f0fdf4',color:statusColor[s]}:{}}>
+                <span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:statusColor[s],marginRight:5,verticalAlign:'middle'}}/>
+                {statusLabel[s]}
+              </span>
+            ))}
+          </div>
+          <button className="btn btn-ghost" style={{width:'100%',justifyContent:'center',marginTop:20,height:44}} onClick={onClose}>
+            Show Results
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════ BOTTOM NAV ══════════════════ */
+function BottomNav({ active, onContacts, onFilter, onToday, onAdd, reachCount }) {
+  return (
+    <div className="bottom-nav">
+      <button className={`bn-item ${active==='contacts'?'active':''}`} onClick={onContacts}>
+        <span className="bn-icon">☰</span>
+        <span>Contacts</span>
+      </button>
+      <button className={`bn-item ${active==='filter'?'active':''}`} onClick={onFilter} style={{position:'relative'}}>
+        <span className="bn-icon">⚙</span>
+        <span>Filter</span>
+        {(reachCount>0) && <span style={{position:'absolute',top:8,right:'calc(50% - 16px)',width:7,height:7,borderRadius:'50%',background:'var(--reach)'}}/>}
+      </button>
+      <button className="bn-item bn-add" onClick={onAdd} style={{color:'#fff'}}>
+        <span style={{fontSize:22,lineHeight:1}}>+</span>
+      </button>
+      <button className={`bn-item ${active==='today'?'active':''}`} onClick={onToday}>
+        <span className="bn-icon">📅</span>
+        <span>Today</span>
+      </button>
+      <button className="bn-item" onClick={()=>{}}>
+        <span className="bn-icon">⋯</span>
+        <span>More</span>
+      </button>
+    </div>
+  );
+}
+
+/* ══════════════════ CONTACT CARDS (mobile) ══════════════════ */
+function ContactCards({ contacts, onTap, onUpdate }) {
+  const [collapsed, setCollapsed] = useLS('ca_collapsed',[]);
+  const isCollapsed = f => collapsed.includes(f);
+  const toggleCollapse = f => setCollapsed(prev=>prev.includes(f)?prev.filter(x=>x!==f):[...prev,f]);
+
+  const groups = [30,60,90,180,360,720].map(f=>({
+    freq:f, contacts: contacts.filter(c=>c.frequency===f)
+  })).filter(g=>g.contacts.length>0);
+
+  if (!groups.length) return (
+    <div className="empty-state"><h3>No contacts found</h3><p>Add a new contact or adjust your filters.</p></div>
+  );
+
+  return (
+    <div className="contact-cards">
+      {groups.map(({freq,contacts:gc})=>{
+        const reachInGroup = gc.filter(c=>getStatus(c)==='reach').length;
+        const coll = isCollapsed(freq);
+        return [
+          <div key={`gh-${freq}`} className="grp-card-hdr" onClick={()=>toggleCollapse(freq)}>
+            <span style={{fontSize:13,marginRight:6,transition:'transform .15s',display:'inline-block',transform:coll?'rotate(-90deg)':'none'}}>▾</span>
+            <span className="grp-card-hdr-label">{freq}-Day · {gc.length} contact{gc.length!==1?'s':''}</span>
+            {reachInGroup>0 && <span className="grp-card-hdr-badge">{reachInGroup} to reach</span>}
+          </div>,
+          ...(!coll ? gc.map(c=>{
+            const status = getStatus(c);
+            const lastDate = c.lastContactedHistory?.slice(-1)[0]?.date||'';
+            return (
+              <div key={c.id} className="contact-card" onClick={()=>onTap(c)}>
+                <div className="contact-card-avatar" style={{background:avatarColor(c.name)}}>{initials(c.name)}</div>
+                <div className="contact-card-body">
+                  <div className="contact-card-name">
+                    {c.name}
+                    {c.birthday && daysUntilBirthday(c.birthday) !== null && daysUntilBirthday(c.birthday) <= 14 && (
+                      <span style={{marginLeft:6,fontSize:11,background:daysUntilBirthday(c.birthday)===0?'#fde047':'#fef9c3',color:'#854d0e',padding:'1px 6px',borderRadius:10,fontWeight:500,verticalAlign:'middle'}}>
+                        {birthdayLabel(daysUntilBirthday(c.birthday))}
+                      </span>
+                    )}
+                  </div>
+                  <div className="contact-card-sub">{c.company}{c.position?` · ${c.position}`:''}</div>
+                </div>
+                <div className="contact-card-right">
+                  <StatusBadge status={status}/>
+                  <span className="contact-card-last">{lastDate?fmtDate(lastDate):'No contact'}</span>
+                </div>
+              </div>
+            );
+          }) : [])
+        ];
+      })}
+    </div>
+  );
+}
+
+/* ══════════════════ STATUS BADGE ══════════════════ */
+function StatusBadge({ status }) {
+  return (
+    <span className={`status status-${status}`}>
+      <span className={`sdot sdot-${status}`}></span>
+      {{reach:'Reach',soon:'Soon',ok:'OK'}[status]}
+    </span>
+  );
+}
+
+/* ══════════════════ INLINE DATE CELL ══════════════════ */
+function InlineDateCell({ value, onSave }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft]     = useState(value || '');
+  const ref = useRef();
+
+  useEffect(() => { if (editing && ref.current) ref.current.focus(); }, [editing]);
+
+  const commit = () => { onSave(draft); setEditing(false); };
+
+  if (editing) return (
+    <input ref={ref} type="date" className="inline-input" value={draft}
+      onChange={e=>setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={e=>{ if(e.key==='Enter') commit(); if(e.key==='Escape') setEditing(false); }}
+    />
+  );
+  return (
+    <span className={`cell-edit ${!value?'empty':''}`} onClick={e=>{e.stopPropagation();setEditing(true)}} title="Click to edit">
+      {fmtDate(value) || 'Set date…'}
+    </span>
+  );
+}
+
+/* ══════════════════ CONTACT TABLE ══════════════════ */
+const COLS = [
+  {key:'name',label:'Name'},
+  {key:'company',label:'Company'},
+  {key:'frequency',label:'Frequency'},
+  {key:'lastContacted',label:'Last Contacted'},
+  {key:'status',label:'Status'},
+  {key:'plannedContact',label:'Planned'},
+];
+
+function ContactTable({ contacts, onEdit, onUpdate, density, isMobile }) {
+  const [sortKey, setSortKey]   = useLS('ca_sort','lastContacted');
+  const [sortDir, setSortDir]   = useLS('ca_sortdir','asc');
+  const [collapsed, setCollapsed] = useLS('ca_collapsed',[]);
+  const [selected, setSelected] = useState(new Set());
+  const [deleteContacts, setDeleteContacts] = useState(null);
+  const [modal, setModal]       = useState(null);
+
+  const [todayModal, setTodayModal]   = useState(false);
+  const [importModal, setImportModal] = useState(false);
+
+  const [search, setSearch] = useState('');
+
+  const visible = contacts.filter(c => {
+    if (search) {
+      const q = search.toLowerCase();
+      if (!c.name.toLowerCase().includes(q) && !c.company.toLowerCase().includes(q) && !(c.category||'').toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  const groups = [30,60,90,180,360,720].map(f => ({
+    freq: f,
+    contacts: visible.filter(c => c.frequency === f)
+  })).filter(g => g.contacts.length > 0);
+
+  const sorted = (arr) => {
+    return [...arr].sort((a,b) => {
+      let va, vb;
+      if (sortKey==='status')        { va=STATUS_ORDER[getStatus(a)]; vb=STATUS_ORDER[getStatus(b)]; }
+      else if (sortKey==='lastContacted') { va=a.lastContactedHistory?.slice(-1)[0]?.date||''; vb=b.lastContactedHistory?.slice(-1)[0]?.date||''; }
+      else if (sortKey==='frequency'){ va=FREQ_ORDER[a.frequency]; vb=FREQ_ORDER[b.frequency]; }
+      else                           { va=(a[sortKey]||'').toLowerCase(); vb=(b[sortKey]||'').toLowerCase(); }
+      if (va < vb) return sortDir==='asc' ? -1 : 1;
+      if (va > vb) return sortDir==='asc' ?  1 :-1;
+      return 0;
+    });
+  };
+
+  const handleSort = key => {
+    if (sortKey===key) setSortDir(d=>d==='asc'?'desc':'asc');
+    else { setSortKey(key); setSortDir('asc'); }
+  };
+
+  const toggleCollapse = f => setCollapsed(prev => prev.includes(f) ? prev.filter(x=>x!==f) : [...prev,f]);
+  const isCollapsed    = f => collapsed.includes(f);
+
+  const toggleSelect = id => setSelected(prev => { const s=new Set(prev); s.has(id)?s.delete(id):s.add(id); return s; });
+  const toggleAll    = ids => setSelected(prev => ids.every(id=>prev.has(id)) ? new Set([...prev].filter(id=>!ids.includes(id))) : new Set([...prev,...ids]));
+  const selArr       = [...selected];
+  const selContacts  = contacts.filter(c=>selected.has(c.id));
+
+  const handleDeleteConfirm = () => {
+    onUpdate(prev => prev.filter(c=>!selected.has(c.id)));
+    setSelected(new Set());
+    setDeleteContacts(null);
+  };
+
+  const handleContactSave = (updated) => {
+    if (!updated) { onUpdate(prev=>prev.filter(c=>c.id!==modal.id)); }
+    else if (!updated.id || modal==='add') onUpdate(prev=>[...prev,{...updated,id:String(Date.now())}]);
+    else onUpdate(prev=>prev.map(c=>c.id===updated.id?updated:c));
+    setModal(null);
+  };
+
+  const handleTodaySave = (updates) => {
+    const d = today();
+    onUpdate(prev => prev.map(c => {
+      const u = updates.find(x=>x.contactId===c.id);
+      if (!u) return c;
+      const hist = [...(c.lastContactedHistory||[]), {date:u.date, notes:u.notes}];
+      const notes = u.notes ? c.notes + (c.notes?'\n':'') + `[${d}] ${u.notes}` : c.notes;
+      return {...c, lastContactedHistory:hist, notes};
+    }));
+  };
+
+  const handleImport = (imported) => {
+    onUpdate(prev => [...prev, ...imported]);
+  };
+
+  const reachCount = contacts.filter(c=>getStatus(c)==='reach').length;
+  const todayBdays = contacts.filter(c=>c.birthday && daysUntilBirthday(c.birthday)===0);
+  const pd = density==='compact' ? '6px 12px' : '8px 12px';
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
+      {/* birthday banner */}
+      {todayBdays.length > 0 && (
+        <div style={{background:'#fef9c3',borderBottom:'1px solid #fde047',padding:'8px 20px',display:'flex',alignItems:'center',gap:10,fontSize:13,flexShrink:0}}>
+          <span style={{fontSize:18}}>🎂</span>
+          <span style={{fontWeight:600}}>Birthday today: </span>
+          <span>{todayBdays.map(c=>c.name).join(', ')}</span>
+        </div>
+      )}
+      {/* topbar */}
+      <div className="topbar">
+        <span className="topbar-title">Contacts</span>
+        {reachCount > 0 && !isMobile && <span style={{fontSize:12,background:'#fef2f2',color:'#dc2626',padding:'3px 10px',borderRadius:20,fontWeight:500}}>{reachCount} to reach</span>}
+        <span style={{flex:1}}/>
+        <div className="topbar-actions-desktop">
+          <button className="btn btn-ghost" onClick={()=>setTodayModal(true)}>📅 Today's Contacts</button>
+          <button className="btn btn-ghost" onClick={()=>setImportModal(true)}>⬆ Import</button>
+          <button className="btn btn-primary" onClick={()=>setModal('add')}>+ New Contact</button>
+          <div style={{width:1,height:20,background:'var(--bdr)',margin:'0 4px'}}/>
+        </div>
+        <div className="search">
+          <span className="search-icon">⌕</span>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search…" />
+        </div>
+        {isMobile && <button className="btn btn-ghost" style={{padding:'0 10px',minWidth:36}} onClick={()=>setImportModal(true)}>⬆</button>}
+      </div>
+
+      {/* selection bar */}
+      {selArr.length > 0 && (
+        <div className="sel-bar">
+          <span>{selArr.length} selected</span>
+          <button className="btn btn-danger" style={{height:28,fontSize:12}} onClick={()=>setDeleteContacts(selContacts)}>Delete</button>
+          <button className="btn btn-ghost" style={{height:28,fontSize:12}} onClick={()=>setSelected(new Set())}>Clear</button>
+        </div>
+      )}
+
+      {/* content — table on desktop, cards on mobile */}
+      <div className="content tbl-wrap">
+        {isMobile ? (
+          <ContactCards contacts={visible} onTap={c=>setModal(c)} onUpdate={onUpdate}/>
+        ) : (
+          groups.length === 0 ? (
+            <div className="empty-state"><h3>No contacts found</h3><p>Add a new contact or adjust your filters.</p></div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th style={{width:36,padding:'8px 12px'}}><input type="checkbox" onChange={()=>toggleAll(visible.map(c=>c.id))} checked={visible.length>0&&visible.every(c=>selected.has(c.id))} /></th>
+                  {COLS.map(col=>(
+                    <th key={col.key} className={sortKey===col.key?'sorted':''} onClick={()=>handleSort(col.key)}>
+                      {col.label} {sortKey===col.key?(sortDir==='asc'?'↑':'↓'):''}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {groups.map(({freq,contacts:gc}) => {
+                  const coll = isCollapsed(freq);
+                  const reachInGroup = gc.filter(c=>getStatus(c)==='reach').length;
+                  return [
+                    <tr key={`g-${freq}`} className="grp-row" onClick={()=>toggleCollapse(freq)}>
+                      <td colSpan={7}>
+                        <em className="grp-chevron" style={{transform:coll?'rotate(-90deg)':'none',display:'inline-block'}}>▾</em>
+                        {freq}-Day Contacts
+                        <span style={{marginLeft:10,fontWeight:400,color:'var(--t3)'}}>{gc.length} contact{gc.length!==1?'s':''}</span>
+                        {reachInGroup>0 && <span style={{marginLeft:12,color:'var(--reach)',fontWeight:600,fontSize:11}}>• {reachInGroup} to reach</span>}
+                      </td>
+                    </tr>,
+                    ...(!coll ? sorted(gc).map(c => {
+                      const status = getStatus(c);
+                      const lastDate = c.lastContactedHistory?.slice(-1)[0]?.date || '';
+                      return (
+                        <tr key={c.id} className={`data-row${selected.has(c.id)?' sel':''}`}
+                          onDoubleClick={()=>setModal(c)}>
+                          <td style={{padding:pd}}><input type="checkbox" checked={selected.has(c.id)} onChange={()=>toggleSelect(c.id)} onClick={e=>e.stopPropagation()}/></td>
+                          <td style={{padding:pd,fontWeight:500}}>
+                            {c.name}
+                            {c.birthday && daysUntilBirthday(c.birthday) !== null && daysUntilBirthday(c.birthday) <= 7 && (
+                              <span style={{marginLeft:6,fontSize:11,background:daysUntilBirthday(c.birthday)===0?'#fde047':'#fef9c3',color:'#854d0e',padding:'1px 6px',borderRadius:10,fontWeight:500}}>
+                                {birthdayLabel(daysUntilBirthday(c.birthday))}
+                              </span>
+                            )}
+                          </td>
+                          <td style={{padding:pd,color:'var(--t2)'}}>{c.company}</td>
+                          <td style={{padding:pd}}><span style={{fontSize:12,background:'#f1f5f9',color:'var(--t2)',padding:'2px 8px',borderRadius:20}}>{freq}d</span></td>
+                          <td style={{padding:pd}}>
+                            <InlineDateCell value={lastDate} onSave={d=>{
+                              if(!d) return;
+                              onUpdate(prev=>prev.map(x=>x.id===c.id?{...x,lastContactedHistory:[...(x.lastContactedHistory||[]),{date:d,notes:''}]}:x));
+                            }}/>
+                          </td>
+                          <td style={{padding:pd}}><StatusBadge status={status}/></td>
+                          <td style={{padding:pd}}>
+                            <InlineDateCell value={c.plannedContact} onSave={d=>{
+                              onUpdate(prev=>prev.map(x=>x.id===c.id?{...x,plannedContact:d}:x));
+                            }}/>
+                          </td>
+                        </tr>
+                      );
+                    }) : [])
+                  ];
+                })}
+              </tbody>
+            </table>
+          )
+        )}
+      </div>
+
+      {/* modals */}
+      {modal && <ContactModal contact={modal==='add'?null:modal} onSave={handleContactSave} onClose={()=>setModal(null)}/>}
+      {todayModal && <TodaysContactsModal contacts={contacts} onSave={handleTodaySave} onClose={()=>setTodayModal(false)}/>}
+      {deleteContacts && <DeleteConfirmModal contacts={deleteContacts} onConfirm={handleDeleteConfirm} onClose={()=>setDeleteContacts(null)}/>}
+      {importModal && <ImportModal onImport={handleImport} onClose={()=>setImportModal(false)}/>}
+    </div>
+  );
+}
+
+/* ══════════════════ APP ══════════════════ */
+const TWEAK_DEFAULTS = {
+  "accentColor": "#3b82f6",
+  "density": "comfortable",
+  "sidebarColor": "#0f172a"
+};
+
+/* ── Firebase real-time data hook ── */
+function useFirebaseDB(uid) {
+  const [data, setDataLocal] = useState(null); // null = still loading
+  const writing = useRef(false);
+  const refPath = `users/${uid}`;
+
+  useEffect(() => {
+    const ref = firebase.database().ref(refPath);
+    const handler = snap => {
+      if (writing.current) return;
+      const raw = snap.val();
+      // Helper: Firebase may return sparse arrays as objects with numeric keys
+      const toArr = v => !v ? [] : Array.isArray(v) ? v : Object.values(v);
+      if (!raw || !raw.contacts) {
+        // First login — seed with sample data
+        const initial = {
+          contacts: SAMPLE,
+          freqFilter: [30,60,90,180,360,720],
+          statusFilter: ['reach','soon','ok']
+        };
+        writing.current = true;
+        ref.set(initial).finally(() => { writing.current = false; });
+        setDataLocal(initial);
+      } else {
+        setDataLocal({
+          contacts:     toArr(raw.contacts),
+          freqFilter:   toArr(raw.freqFilter),
+          statusFilter: toArr(raw.statusFilter),
+        });
+      }
+    };
+    ref.on('value', handler);
+    return () => ref.off('value', handler);
+  }, [uid]);
+
+  const setData = useCallback(updater => {
+    setDataLocal(prev => {
+      if (!prev) return prev;
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      writing.current = true;
+      firebase.database().ref(refPath).set(next).finally(() => { writing.current = false; });
+      return next;
+    });
+  }, [uid]);
+
+  return [data, setData];
+}
+
+/* Per-user main app — keyed on uid so it remounts on account switch */
+function MainApp({ user, onLogout }) {
+  const [dbData, setDbData]   = useFirebaseDB(user.uid);
+
+  // Derive contacts / filters from the single Firebase document
+  const contacts     = dbData?.contacts     ?? [];
+  const freqFilter   = dbData?.freqFilter   ?? [30,60,90,180,360,720];
+  const statusFilter = dbData?.statusFilter ?? ['reach','soon','ok'];
+
+  const setContacts = u => setDbData(p => ({...p, contacts:     typeof u==='function'?u(p.contacts):u    }));
+  const setFreqFilter   = u => setDbData(p => ({...p, freqFilter:   typeof u==='function'?u(p.freqFilter):u  }));
+  const setStatusFilter = u => setDbData(p => ({...p, statusFilter: typeof u==='function'?u(p.statusFilter):u}));
+
+  const [tweaks, setTweaks]     = useState(TWEAK_DEFAULTS);
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+  const [filterDrawer, setFilterDrawer] = useState(false);
+  const [todayModal, setTodayModal]     = useState(false);
+  const [addModal, setAddModal]         = useState(false);
+  const [editModal, setEditModal]       = useState(null);
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--accent', tweaks.accentColor);
+    document.documentElement.style.setProperty('--accent2', tweaks.accentColor);
+    document.documentElement.style.setProperty('--sb', tweaks.sidebarColor);
+  }, [tweaks]);
+
+  useEffect(() => {
+    window.addEventListener('message', e => {
+      if (e.data?.type==='__activate_edit_mode')   setTweaksOpen(true);
+      if (e.data?.type==='__deactivate_edit_mode') setTweaksOpen(false);
+    });
+    window.parent.postMessage({type:'__edit_mode_available'}, '*');
+  }, []);
+
+  const setTweak = (k,v) => {
+    setTweaks(t=>{
+      const next = {...t,[k]:v};
+      window.parent.postMessage({type:'__edit_mode_set_keys',edits:next},'*');
+      return next;
+    });
+  };
+
+  const handleTodaySave = (updates) => {
+    const d = today();
+    setContacts(prev => prev.map(c => {
+      const u = updates.find(x=>x.contactId===c.id);
+      if (!u) return c;
+      const hist = [...(c.lastContactedHistory||[]), {date:u.date, notes:u.notes}];
+      const notes = u.notes ? c.notes + (c.notes?'\n':'') + `[${d}] ${u.notes}` : c.notes;
+      return {...c, lastContactedHistory:hist, notes};
+    }));
+  };
+
+  const handleAddSave = (updated) => {
+    if (updated) setContacts(prev=>[...prev,{...updated,id:String(Date.now())}]);
+    setAddModal(false);
+  };
+
+  // Show spinner until Firebase has delivered the first snapshot
+  if (!dbData) return <LoadingScreen message="Loading your contacts…"/>;
+
+  const filteredContacts = contacts.filter(c =>
+    freqFilter.includes(c.frequency) && statusFilter.includes(getStatus(c))
+  );
+  const reachCount = contacts.filter(c=>getStatus(c)==='reach').length;
+
+  return (
+    <div className="layout">
+      {!isMobile && (
+        <Sidebar
+          contacts={contacts}
+          freqFilter={freqFilter} setFreqFilter={setFreqFilter}
+          statusFilter={statusFilter} setStatusFilter={setStatusFilter}
+          user={user} onLogout={onLogout}
+          onEditContact={c=>setEditModal(c)}
+        />
+      )}
+      <div className="main">
+        <ContactTable
+          contacts={filteredContacts}
+          onEdit={c=>c}
+          onUpdate={setContacts}
+          density={tweaks.density}
+          isMobile={isMobile}
+        />
+        {isMobile && (
+          <BottomNav
+            active="contacts"
+            reachCount={reachCount}
+            onContacts={()=>{}}
+            onFilter={()=>setFilterDrawer(true)}
+            onToday={()=>setTodayModal(true)}
+            onAdd={()=>setAddModal(true)}
+          />
+        )}
+      </div>
+
+      {filterDrawer && (
+        <FilterDrawer
+          contacts={contacts}
+          freqFilter={freqFilter} setFreqFilter={setFreqFilter}
+          statusFilter={statusFilter} setStatusFilter={setStatusFilter}
+          onClose={()=>setFilterDrawer(false)}
+        />
+      )}
+      {todayModal && <TodaysContactsModal contacts={contacts} onSave={handleTodaySave} onClose={()=>setTodayModal(false)}/>}
+      {addModal && <ContactModal contact={null} onSave={handleAddSave} onClose={()=>setAddModal(false)}/>}
+      {editModal && <ContactModal contact={editModal} onSave={updated=>{
+        if (!updated) setContacts(prev=>prev.filter(c=>c.id!==editModal.id));
+        else setContacts(prev=>prev.map(c=>c.id===updated.id?updated:c));
+        setEditModal(null);
+      }} onClose={()=>setEditModal(null)}/>}
+
+      <div id="tweaks-panel" style={{display:tweaksOpen?'block':'none'}}>
+        <h3>Tweaks</h3>
+        <div className="tw-row"><label>Accent color</label><input type="color" value={tweaks.accentColor} onChange={e=>setTweak('accentColor',e.target.value)}/></div>
+        <div className="tw-row"><label>Sidebar color</label><input type="color" value={tweaks.sidebarColor} onChange={e=>setTweak('sidebarColor',e.target.value)}/></div>
+        <div className="tw-row">
+          <label>Row density</label>
+          <select value={tweaks.density} onChange={e=>setTweak('density',e.target.value)}>
+            <option value="comfortable">Comfortable</option>
+            <option value="compact">Compact</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Auth shell — Firebase Auth drives everything */
+function App() {
+  const [user, setUser] = useState(undefined); // undefined = auth state not yet known
+
+  useEffect(() => {
+    if (!FB_CONFIGURED) return;
+    const unsub = firebase.auth().onAuthStateChanged(fbUser => {
+      setUser(fbUser
+        ? { uid: fbUser.uid, email: fbUser.email, name: fbUser.displayName || fbUser.email.split('@')[0] }
+        : null
+      );
+    });
+    return unsub;
+  }, []);
+
+  if (!FB_CONFIGURED) return <SetupScreen/>;
+  if (user === undefined) return <LoadingScreen message="Checking authentication…"/>;
+
+  const handleLogin  = (email, pass) => firebase.auth().signInWithEmailAndPassword(email, pass);
+  const handleSignUp = async (name, email, pass) => {
+    const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+    await cred.user.updateProfile({ displayName: name });
+    // onAuthStateChanged fires automatically and updates user state
+  };
+  const handleReset  = email => firebase.auth().sendPasswordResetEmail(email);
+  const handleLogout = () => firebase.auth().signOut();
+
+  if (!user) return <LoginScreen onLogin={handleLogin} onSignUp={handleSignUp} onReset={handleReset}/>;
+
+  return <MainApp key={user.uid} user={user} onLogout={handleLogout}/>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
